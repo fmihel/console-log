@@ -1,0 +1,26 @@
+{
+    "name": "fmihel/console-log",
+    "description": "error,log,console,php,javascript,js,error_log,console.log,console.info",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "fmihel",
+            "email": "fmihel76@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "fmihel\\": "source"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "fmihel\\test\\": "tests"
+        }
+    },
+    "require": {},
+    "require-dev": {
+        "phpunit/phpunit": "^8.5"
+    }
+}
