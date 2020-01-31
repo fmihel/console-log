@@ -2,26 +2,104 @@
 namespace fmihel;
 
 /** 
- * Класс вывода в log файл, с интерфейсом похожим на интерфейс 
+ * Класс вывода в log файл, с интерфейсом похожим на интерфейс console для js
+ * Class out to log file like interface as console for js
 */
 class console{
+
     private static $params= [
         'break'     =>"\n", // line break symbol
         'breakFirst'=>true, // true - before print first param was out break
         'breakOnlyComposite'=>true, // break only arg or one of args is composite object (array,object,...)
         'printParamNum'=>true,
-        
-        'short'=>3,
         'header'=>'[file{object}:line] ', // format for header, file can be [file,short,name] 
-        
+        'short'=>3, // сount of dir for input when format header use short
+        'headerReplace'=>['from'=>['{}'],'to'=>['']], // replace strings in header after assign format
     ];
-    private static function params($params){
+    
+    /** 
+     * get or set console param
+     * @return array of params 
+    */
+    public static function params($params = false){
         if (gettype($params) === 'array')
             self::$params = array_merge(self::$params,$params);
-        
         return self::$params;
     }
-    private static function formatFileName(string $name,$format):string{
+
+    public static function log(...$args){
+        $p = self::$params;
+
+        $trace = self::trace();
+        
+        $out = '';
+        $num = 0;
+        
+        $composite = self::isComposite($args);
+
+        foreach($args as $arg){
+            
+            $break = (($p['breakOnlyComposite']&& $composite) && ($out !== '' || $p['breakFirst']) );
+            $out.=
+                ($break ? $p['break'] : '' )
+                .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
+                .self::argToStr($arg);
+        }
+        error_log(self::getHeader($trace).$out);
+    }
+
+    public static function info(...$args){
+        $p = self::$params;
+
+        $trace = self::trace();
+        
+        $out = '';
+        $num = 0;
+        
+        $composite = self::isComposite($args);
+
+        foreach($args as $arg){
+            
+            $break = (($p['breakOnlyComposite']&& $composite) && ($out !== '' || $p['breakFirst']) );
+            $out.=
+                ($break ? $p['break'] : '' )
+                .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
+                .self::argToStr($arg);
+        }
+        error_log(self::getHeader($trace).$out);
+    }
+
+    public static function error(...$args){
+        $p = self::$params;
+
+        $trace = self::trace();
+        
+        $out = '';
+        $num = 0;
+        
+        $composite = self::isComposite($args);
+        if ( count($args) === 1 && is_a($args[0],'\Exception') )
+            $composite = false;
+
+        foreach($args as $arg){
+            
+            $break = (($p['breakOnlyComposite']&& $composite) && ($out !== '' || $p['breakFirst']) );
+            $out.=
+                ($break ? $p['break'] : '' )
+                .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
+                .self::argToStr($arg,['exceptionAsObject'=>false]);
+        }
+        error_log('[ERROR] '.self::getHeader($trace).$out);
+
+    }
+
+    /** 
+     * formating file name for use in header
+     * @param {string} $name - original file name
+     * @param {string} $format - type of format 'file' | 'name' | 'short' 
+     * @return string
+    */
+    private static function formatFileName(string $name,string $format):string{
         $p = self::$params;
         
         if ($format === 'name')
@@ -41,13 +119,24 @@ class console{
                 $out = '';
                 for($i = $len-1;$i>$len-$count;$i--)
                     $out = $dirs[$i].($out!==''?'\\':'').$out;
-                return '..\\'.$out;
+                return  ($len!=$format?'..\\':'').$out;
             }
         }
 
         return $name;
     }
+    /** 
+     * @return [
+     * 'line'=>false  | num of line calling console command
+     * 'func'=>false, | name of func calling console command
+     * 'type'=>false, | type object -> or :: if func in class
+     * 'file'=>false, | file name
+     * 'class'=>false,| class name calling console command
+     * 'fmt'=>0       | 1 - outer func 2 - class func
+     * ];
+    */
     private static function trace(){
+
         $p = self::$params;
         $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS,3);
         $len = count($trace);
@@ -80,7 +169,9 @@ class console{
 
         return $out;
     }
-    
+    /** 
+     * @return string for out before log message
+    */
     private static function getHeader($trace):string{
         $p = self::$params;
         
@@ -96,18 +187,28 @@ class console{
             $object.=$trace['func'] ? $trace['func'] :'';
         }
 
-        $replace = ['{}'];
-        $to = [''];        
         $out = str_replace(
-            ['file','name','short','object','line','{}'],
-            [$file,$name,$short,$object,$line,''],
-            $p['header']);
+            ['file','name','short','object','line'],
+            [$file,$name,$short,$object,$line],
+            $p['header']
+        );
+
+        $out = str_replace(
+            $p['headerReplace']['from'],
+            $p['headerReplace']['to'],
+            $out
+        );
         
         return $out;    
     }
-    
-    private static function argToStr($arg):string{
-        
+    /** 
+     * translate $arg to string representation
+     * @return string
+    */
+    private static function argToStr($arg,Array $config=[]):string{
+        $c = array_merge([
+            'exceptionAsObject' => true,
+        ],$config);
         $type = gettype($arg);
 
         if ($type === 'string') 
@@ -124,42 +225,33 @@ class console{
 
         if ($type === 'NULL')
             return 'NULL';
+
+        if ($type === 'object' && is_a($arg,'\Exception') && !$c['exceptionAsObject']){
+            return 'Exception(code:'.$arg->getCode().',line:'.$arg->getLine().') :"'.$arg->getMessage().'"';
+        }
             
         return print_r($arg,true);
             
         
     }
-    
-    static function log(...$args){
-        $p = self::$params;
-
-        $trace = self::trace();
-        
-        $out = '';
-        $num = 0;
-        
-        $composite = false;
+    /** 
+     * determinate have the args a composite param (array,object,res)
+     * @return boolean
+    */
+    private static function isComposite(Array $args):bool{
         foreach($args as $arg){
             $type = gettype($arg);
             if (array_search($type,['string','integer','boolean','double','NULL']) === false) {
-                $composite = true;
-                break;
+                return true;
             }
         };
-
-        foreach($args as $arg){
-            
-            $break = (($p['breakOnlyComposite']&& $composite) && ($out !== '' || $p['breakFirst']) );
-            $prefParam =  
-            $out.=
-                ($break ? $p['break'] : '' )
-                .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
-                .self::argToStr($arg);
-        }
-        error_log(self::getHeader($trace).$out.'');
-        
+        return false;
     }
-}    
+    
+    
+    
+}   
+    
 
 
 ?>
