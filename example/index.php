@@ -13,8 +13,9 @@ require_once __DIR__.'/test2.php';
 use fmihel\console;
 
 console::params([
-    'header'=>'[short:line]',
-    
+    'header'=>'[short:line] ',
+    'stringQuotes'=>'',
+ 
 ]);
 // Ex: 1 simple call
 //console::log("test fore some string \n out with enter for some more");
@@ -30,10 +31,10 @@ console::params([
 
 //echo '</xmp>';
 try {
-    throw new Exception("Error Processing Request", 1);
+    throw new \Exception("Error Processing Request", 1);
         
 } catch (\Exception $e) {
-    console::error($e,'qhjwedewjh');
+    console::error($e);
 };
 
 console::log('qjhedjhew');

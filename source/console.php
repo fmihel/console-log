@@ -15,6 +15,7 @@ class console{
         'header'=>'[file{object}:line] ', // format for header, file can be [file,short,name] 
         'short'=>3, // сount of dir for input when format header use short
         'headerReplace'=>['from'=>['{}'],'to'=>['']], // replace strings in header after assign format
+        'stringQuotes'=>'"', // quotes for print string 
     ];
     
     /** 
@@ -47,6 +48,28 @@ class console{
         }
         error_log(self::getHeader($trace).$out);
     }
+
+    public static function debug(...$args){
+        $p = self::$params;
+
+        $trace = self::trace();
+        
+        $out = '';
+        $num = 0;
+        
+        $composite = self::isComposite($args);
+
+        foreach($args as $arg){
+            
+            $break = (($p['breakOnlyComposite']&& $composite) && ($out !== '' || $p['breakFirst']) );
+            $out.=
+                ($break ? $p['break'] : '' )
+                .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
+                .self::argToStr($arg);
+        }
+        error_log(self::getHeader($trace).$out);
+    }
+
 
     public static function info(...$args){
         $p = self::$params;
@@ -114,7 +137,7 @@ class console{
             
             $len = count($dirs);
 
-            if ($len<=$format){
+            if ($len>=$format){
                 $count = min($len,$format);
                 $out = '';
                 for($i = $len-1;$i>$len-$count;$i--)
@@ -209,10 +232,12 @@ class console{
         $c = array_merge([
             'exceptionAsObject' => true,
         ],$config);
+        $p = self::$params;
+
         $type = gettype($arg);
 
         if ($type === 'string') 
-            return '"'.$arg.'"';
+            return $p['stringQuotes'].$arg.$p['stringQuotes'];
         
         if ($type === 'integer')
             return ''.$arg;
@@ -227,7 +252,7 @@ class console{
             return 'NULL';
 
         if ($type === 'object' && is_a($arg,'\Exception') && !$c['exceptionAsObject']){
-            return 'Exception(code:'.$arg->getCode().',line:'.$arg->getLine().') :"'.$arg->getMessage().'"';
+            return 'Exception(code:'.$arg->getCode().',line:'.$arg->getLine().') : '.$p['stringQuotes'].$arg->getMessage().$p['stringQuotes'];
         }
             
         return print_r($arg,true);
