@@ -15,7 +15,8 @@ class console{
         'header'=>'[file{object}:line] ', // format for header, file can be [file,short,name] 
         'short'=>3, // сount of dir for input when format header use short
         'headerReplace'=>['from'=>['{}'],'to'=>['']], // replace strings in header after assign format
-        'stringQuotes'=>'"', // quotes for print string 
+        'stringQuotes'=>'"', // quotes for print string
+        'gap'=>' ',// margin between args in one line out string
     ];
     
     /** 
@@ -39,10 +40,10 @@ class console{
         $composite = self::isComposite($args);
 
         foreach($args as $arg){
-            
+            $gap = ($out !== ''?$p['gap']:'');
             $break = (($p['breakOnlyComposite']&& $composite) && ($out !== '' || $p['breakFirst']) );
             $out.=
-                ($break ? $p['break'] : '' )
+                ($break ? $p['break'] : $gap )
                 .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
                 .self::argToStr($arg);
         }
@@ -60,10 +61,10 @@ class console{
         $composite = self::isComposite($args);
 
         foreach($args as $arg){
-            
+            $gap = ($out !== ''?$p['gap']:'');
             $break = (($p['breakOnlyComposite']&& $composite) && ($out !== '' || $p['breakFirst']) );
             $out.=
-                ($break ? $p['break'] : '' )
+                ($break ? $p['break'] : $gap )
                 .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
                 .self::argToStr($arg);
         }
@@ -82,10 +83,10 @@ class console{
         $composite = self::isComposite($args);
 
         foreach($args as $arg){
-            
+            $gap = ($out !== ''?$p['gap']:'');
             $break = (($p['breakOnlyComposite']&& $composite) && ($out !== '' || $p['breakFirst']) );
             $out.=
-                ($break ? $p['break'] : '' )
+                ($break ? $p['break'] : $gap )
                 .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
                 .self::argToStr($arg);
         }
@@ -105,10 +106,10 @@ class console{
             $composite = false;
 
         foreach($args as $arg){
-            
+            $gap = ($out !== ''?$p['gap']:'');
             $break = (($p['breakOnlyComposite']&& $composite) && ($out !== '' || $p['breakFirst']) );
             $out.=
-                ($break ? $p['break'] : '' )
+                ($break ? $p['break'] : $gap )
                 .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
                 .self::argToStr($arg,['exceptionAsObject'=>false]);
         }

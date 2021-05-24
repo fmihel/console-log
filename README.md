@@ -45,5 +45,6 @@ name|notes|example|
 |short'=>3|сount of dir for input when format header use short|console::params(['short'=>3]);|
 |headerReplace|replace strings in header after assign format|console::params(['headerReplace'=>['from'=>['{}'],'to'=>['']]]);|
 |stringQuotes|quotes for print string |console::params(['stringQuotes'=>'"']);|
+|gap|margin between args if out in one line string |console::params(['gap'=>'"']);|
 
 
