@@ -17,6 +17,40 @@ console::params([
     'stringQuotes'=>'',
  
 ]);
+
+function aa($msg=''){
+    
+    try{
+        
+        throw new \Exception('aa rais except');    
+        //console::doThrow('text=','more');
+        return 1;
+                    
+    }catch(Exception $e){
+        //$msg = 'Exception ['.__FILE__.':'.__LINE__.'] '.$e->getMessage();
+        //error_log($msg);
+        //throw new Exception('--'.$msg);
+        console::doThrow($e);
+    }
+    
+    return 0;
+}
+
+function bb($msg=''){
+    
+    try{
+        console::error('test error');
+        aa();
+        throw new Exception('bb rais except');    
+    
+    }catch(Exception $e){
+        //$msg = '  Exception ['.__FILE__.':'.__LINE__.'] '.$e->getMessage();
+        //error_log($msg);
+        //throw new Exception($e->getMessage());
+        console::doThrow($e);
+    }
+    
+}
 // Ex: 1 simple call
 //console::log("test fore some string \n out with enter for some more");
 
@@ -31,9 +65,10 @@ console::params([
 
 //echo '</xmp>';
 try {
-    throw new \Exception("Error Processing Request", 1);
-        
+    bb();
+    //throw new \Exception("Error Processing Request", 1);        
 } catch (\Exception $e) {
+    //console::log($e->getMessage());
     console::error($e);
 };
 

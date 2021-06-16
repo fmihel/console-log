@@ -17,6 +17,7 @@ class console{
         'headerReplace'=>['from'=>['{}'],'to'=>['']], // replace strings in header after assign format
         'stringQuotes'=>'"', // quotes for print string
         'gap'=>' ',// margin between args in one line out string
+        'trace-check'=>'trace [',// check for have trace text in message 
     ];
     
     /** 
@@ -113,7 +114,13 @@ class console{
                 .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
                 .self::argToStr($arg,['exceptionAsObject'=>false]);
         }
-        error_log('[ERROR] '.self::getHeader($trace).$out);
+        if (strpos($out,$p['trace-check'])!==false){
+            error_log('');
+            error_log('------------------------------------------------------');
+            error_log('Exception '.self::getHeader($trace).$out);
+            error_log('------------------------------------------------------');
+        }else
+            error_log('[ERROR] '.self::getHeader($trace).$out);
 
     }
 
@@ -253,7 +260,13 @@ class console{
             return 'NULL';
 
         if ($type === 'object' && is_a($arg,'\Exception') && !$c['exceptionAsObject']){
-            return 'Exception(code:'.$arg->getCode().',line:'.$arg->getLine().') : '.$p['stringQuotes'].$arg->getMessage().$p['stringQuotes'];
+            
+            $msg = $arg->getMessage();
+            
+            if (strpos($msg,$p['trace-check'])!==false)
+                return '(code:'.$arg->getCode().') '.$p['stringQuotes'].$msg.$p['stringQuotes'];
+            else
+                return 'Exception(code:'.$arg->getCode().',line:'.$arg->getLine().') : '.$p['stringQuotes'].$msg.$p['stringQuotes'];
         }
             
         return print_r($arg,true);
@@ -274,6 +287,26 @@ class console{
         return false;
     }
     
+    public static function doThrow(...$args){
+        
+        $trace = self::trace();
+        $short = $trace['file'] ? self::formatFileName($trace['file'],'short') : '';
+        $line = $trace['line'] ? $trace['line'] : '';        
+        $code = 0;
+
+        $msg ="\ntrace [".$short.':'.$line.'] ';
+        if ( is_a($args[0],'\Exception') ){
+            $code = count($args)>1?$args[1]:0;
+            $msg.=$args[0]->getMessage();
+        }else{
+
+            foreach($args as $arg)
+                $msg.=self::argToStr($arg);
+        }
+        throw new \Exception($msg,$code);
+        //error_log(print_r($trace,true));
+        //error_log(gettype($args[0]));
+    }
     
     
 }   
