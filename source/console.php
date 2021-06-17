@@ -6,7 +6,6 @@ namespace fmihel;
  * Class out to log file like interface as console for js
 */
 class console{
-
     private static $params= [
         'break'     =>"\n", // line break symbol
         'breakFirst'=>true, // true - before print first param was out break
@@ -17,7 +16,6 @@ class console{
         'headerReplace'=>['from'=>['{}'],'to'=>['']], // replace strings in header after assign format
         'stringQuotes'=>'"', // quotes for print string
         'gap'=>' ',// margin between args in one line out string
-        'trace-check'=>'trace [',// check for have trace text in message 
     ];
     
     /** 
@@ -29,12 +27,9 @@ class console{
             self::$params = array_merge(self::$params,$params);
         return self::$params;
     }
-
-    public static function log(...$args){
+    /** форматирование списка аргументов к выводу */
+    private static function _formatArgs(...$args){
         $p = self::$params;
-
-        $trace = self::trace();
-        
         $out = '';
         $num = 0;
         
@@ -48,50 +43,24 @@ class console{
                 .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
                 .self::argToStr($arg);
         }
-        error_log(self::getHeader($trace).$out);
+        return $out;
+
+    }
+    public static function log(...$args){
+
+        $trace = self::trace();
+        error_log(self::getHeader($trace).self::_formatArgs(...$args));
     }
 
     public static function debug(...$args){
-        $p = self::$params;
-
         $trace = self::trace();
-        
-        $out = '';
-        $num = 0;
-        
-        $composite = self::isComposite($args);
-
-        foreach($args as $arg){
-            $gap = ($out !== ''?$p['gap']:'');
-            $break = (($p['breakOnlyComposite']&& $composite) && ($out !== '' || $p['breakFirst']) );
-            $out.=
-                ($break ? $p['break'] : $gap )
-                .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
-                .self::argToStr($arg);
-        }
-        error_log(self::getHeader($trace).$out);
+        error_log(self::getHeader($trace).self::_formatArgs(...$args));
     }
 
 
     public static function info(...$args){
-        $p = self::$params;
-
         $trace = self::trace();
-        
-        $out = '';
-        $num = 0;
-        
-        $composite = self::isComposite($args);
-
-        foreach($args as $arg){
-            $gap = ($out !== ''?$p['gap']:'');
-            $break = (($p['breakOnlyComposite']&& $composite) && ($out !== '' || $p['breakFirst']) );
-            $out.=
-                ($break ? $p['break'] : $gap )
-                .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
-                .self::argToStr($arg);
-        }
-        error_log(self::getHeader($trace).$out);
+        error_log(self::getHeader($trace).self::_formatArgs(...$args));
     }
 
     public static function error(...$args){
@@ -101,10 +70,12 @@ class console{
         
         $out = '';
         $num = 0;
-        
+        $is_exception = false;
         $composite = self::isComposite($args);
-        if ( count($args) === 1 && is_a($args[0],'\Exception') )
+        if ( count($args) === 1 && is_a($args[0],'\Exception') ){
+            $is_exception = true;
             $composite = false;
+        }
 
         foreach($args as $arg){
             $gap = ($out !== ''?$p['gap']:'');
@@ -114,16 +85,58 @@ class console{
                 .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
                 .self::argToStr($arg,['exceptionAsObject'=>false]);
         }
-        if (strpos($out,$p['trace-check'])!==false){
-            error_log('');
-            error_log('------------------------------------------------------');
-            error_log('Exception '.self::getHeader($trace).$out);
-            error_log('------------------------------------------------------');
+
+        if ($is_exception){
+            
+            self::line();
+            //error_log(print_r($args[0]->getTrace(),true));
+            self::_log_exception($args[0],$trace);
+            self::line();
         }else
-            error_log('[ERROR] '.self::getHeader($trace).$out);
+            error_log('Error '.self::getHeader($trace).$out);
 
     }
+    /** логирование Exception  */
+    private static function _log_exception($e,$tr){
 
+        $p = self::$params;
+        //--------------------------------------------------------------
+        $msg=$p['stringQuotes'].$e->getMessage().$p['stringQuotes'];
+        $traces = $e->getTrace();
+        $count = count($traces);
+        //--------------------------------------------------------------
+        $object = ['file'=>$e->getFile(),'line'=>$e->getLine()];
+        if ($count>0){
+            $first = $traces[0];
+            $object['class']    =isset($first['class'])?$first['class']:'';
+            $object['type']     =isset($first['type'])?$first['type']:'';
+            $object['function'] =isset($first['function'])?$first['function'].'()':'';
+        }
+        //--------------------------------------------------------------
+        error_log('Exception '.self::getHeader($tr).$msg);
+        //--------------------------------------------------------------
+        for($i=0;$i<$count;$i++){
+            
+            if ($i<$count-1){
+                $traces[$i]['function'] = isset($traces[$i+1]['function'])?$traces[$i+1]['function']:'';
+                $traces[$i]['class'] = isset($traces[$i+1]['class'])?$traces[$i+1]['class']:'';
+                $traces[$i]['type'] = isset($traces[$i+1]['type'])?$traces[$i+1]['type']:'';
+            }else{
+                $traces[$i]['function'] = '';
+                $traces[$i]['class'] = '';
+                $traces[$i]['type'] = '';
+
+            }
+        }                
+        //--------------------------------------------------------------
+        for($i=0;$i<$count;$i++){   
+            $trace = $traces[$count-$i-1];
+            error_log('trace     '.self::getHeader($trace));
+        };
+        //--------------------------------------------------------------
+        error_log('trace     '.self::getHeader($object));
+        //--------------------------------------------------------------
+    }
     /** 
      * formating file name for use in header
      * @param {string} $name - original file name
@@ -205,7 +218,18 @@ class console{
     */
     private static function getHeader($trace):string{
         $p = self::$params;
-        
+        $trace = array_merge([
+            'file'=>false,
+            'line'=>false,
+            'class'=>false,
+            'func'=>false,
+            'function'=>false,
+            'type'=>false,
+        ],$trace);
+
+        if (!$trace['func'] && $trace['function'])
+            $trace['func'] = $trace['function'];
+
         $file = $trace['file'] ? self::formatFileName($trace['file'],'file') : '';
         $name = $trace['file'] ? self::formatFileName($trace['file'],'name') : '';
         $short = $trace['file'] ? self::formatFileName($trace['file'],'short') : '';
@@ -215,7 +239,7 @@ class console{
         if ($trace['class']||$trace['func']){
             $object.=$trace['class'] ? $trace['class'] :'';
             $object.=$trace['type'] ? $trace['type'] :'';
-            $object.=$trace['func'] ? $trace['func'] :'';
+            $object.=$trace['func'] ? $trace['func'].'()' :'';
         }
 
         $out = str_replace(
@@ -262,11 +286,7 @@ class console{
         if ($type === 'object' && is_a($arg,'\Exception') && !$c['exceptionAsObject']){
             
             $msg = $arg->getMessage();
-            
-            if (strpos($msg,$p['trace-check'])!==false)
-                return '(code:'.$arg->getCode().') '.$p['stringQuotes'].$msg.$p['stringQuotes'];
-            else
-                return 'Exception(code:'.$arg->getCode().',line:'.$arg->getLine().') : '.$p['stringQuotes'].$msg.$p['stringQuotes'];
+            return 'Exception(code:'.$arg->getCode().',line:'.$arg->getLine().') : '.$p['stringQuotes'].$msg.$p['stringQuotes'];
         }
             
         return print_r($arg,true);
@@ -286,26 +306,9 @@ class console{
         };
         return false;
     }
-    
-    public static function doThrow(...$args){
-        
-        $trace = self::trace();
-        $short = $trace['file'] ? self::formatFileName($trace['file'],'short') : '';
-        $line = $trace['line'] ? $trace['line'] : '';        
-        $code = 0;
-
-        $msg ="\ntrace [".$short.':'.$line.'] ';
-        if ( is_a($args[0],'\Exception') ){
-            $code = count($args)>1?$args[1]:0;
-            $msg.=$args[0]->getMessage();
-        }else{
-
-            foreach($args as $arg)
-                $msg.=self::argToStr($arg);
-        }
-        throw new \Exception($msg,$code);
-        //error_log(print_r($trace,true));
-        //error_log(gettype($args[0]));
+    /** отрисовывает разделительную линию */
+    public static function line($line='-',$count = 60){
+        error_log(str_repeat($line,$count));        
     }
     
     

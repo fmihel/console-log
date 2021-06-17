@@ -13,24 +13,32 @@ require_once __DIR__.'/test2.php';
 use fmihel\console;
 
 console::params([
-    'header'=>'[short:line] ',
-    'stringQuotes'=>'',
+    'header'=>'[short{object}:line] ',
+    'stringQuotes'=>' ',
  
 ]);
-
+class test{
+    static function ttt(){
+        try{
+            //throw new \Exception('rais in test');    
+            $test1 = new Test1();
+            $test1->mm();
+            return 1;
+                        
+        }catch(Exception $e){
+            console::error($e);        
+        }
+    
+    }
+}
 function aa($msg=''){
     
     try{
         
-        throw new \Exception('aa rais except');    
-        //console::doThrow('text=','more');
-        return 1;
+        test::ttt();
                     
     }catch(Exception $e){
-        //$msg = 'Exception ['.__FILE__.':'.__LINE__.'] '.$e->getMessage();
-        //error_log($msg);
-        //throw new Exception('--'.$msg);
-        console::doThrow($e);
+        throw $e;        
     }
     
     return 0;
@@ -39,15 +47,11 @@ function aa($msg=''){
 function bb($msg=''){
     
     try{
-        console::error('test error');
         aa();
-        throw new Exception('bb rais except');    
     
     }catch(Exception $e){
-        //$msg = '  Exception ['.__FILE__.':'.__LINE__.'] '.$e->getMessage();
-        //error_log($msg);
-        //throw new Exception($e->getMessage());
-        console::doThrow($e);
+        //console::error($e);    
+        throw $e;
     }
     
 }
@@ -64,14 +68,12 @@ function bb($msg=''){
 //$test1->f1(10);
 
 //echo '</xmp>';
+
 try {
     bb();
-    //throw new \Exception("Error Processing Request", 1);        
 } catch (\Exception $e) {
-    //console::log($e->getMessage());
     console::error($e);
 };
 
-console::log('qjhedjhew');
 
 ?>
