@@ -1,8 +1,7 @@
 <?php
 namespace fmihel;
 
-/** 
- * Класс вывода в log файл, с интерфейсом похожим на интерфейс console для js
+/** Класс вывода в log файл, с интерфейсом похожим на интерфейс console для js
  * Class out to log file like interface as console for js
 */
 class console{
@@ -16,10 +15,10 @@ class console{
         'headerReplace'=>['from'=>['{}'],'to'=>['']], // replace strings in header after assign format
         'stringQuotes'=>'"', // quotes for print string
         'gap'=>' ',// margin between args in one line out string
+        'onGetExceptionMessage'=>false, // callback as function ($e:Exception) :string
     ];
     
-    /** 
-     * get or set console param
+    /** get or set console param
      * @return array of params 
     */
     public static function params($params = false){
@@ -46,23 +45,23 @@ class console{
         return $out;
 
     }
+    /** вывод в лог */
     public static function log(...$args){
 
         $trace = self::trace();
         error_log(self::getHeader($trace).self::_formatArgs(...$args));
     }
-
+    /** клон console::log */
     public static function debug(...$args){
         $trace = self::trace();
         error_log(self::getHeader($trace).self::_formatArgs(...$args));
     }
-
-
+    /** клон console::log */
     public static function info(...$args){
         $trace = self::trace();
         error_log(self::getHeader($trace).self::_formatArgs(...$args));
     }
-
+    /** вывод в лог либо аналогично выводу log с приставкой error либо вывод объекта Exception*/
     public static function error(...$args){
         $p = self::$params;
 
@@ -101,7 +100,10 @@ class console{
 
         $p = self::$params;
         //--------------------------------------------------------------
-        $msg=$p['stringQuotes'].$e->getMessage().$p['stringQuotes'];
+        
+        $msg = ( $p['onGetExceptionMessage'] ? $p['onGetExceptionMessage']($e) : $e->getMessage() );
+        
+        $msg = $p['stringQuotes'].$msg.$p['stringQuotes'];
         $traces = $e->getTrace();
         $count = count($traces);
         //--------------------------------------------------------------
@@ -137,8 +139,7 @@ class console{
         error_log('trace     '.self::getHeader($object));
         //--------------------------------------------------------------
     }
-    /** 
-     * formating file name for use in header
+    /** formating file name for use in header
      * @param {string} $name - original file name
      * @param {string} $format - type of format 'file' | 'name' | 'short' 
      * @return string
@@ -169,7 +170,7 @@ class console{
 
         return $name;
     }
-    /** 
+    /** разбор debug_backtrace
      * @return [
      * 'line'=>false  | num of line calling console command
      * 'func'=>false, | name of func calling console command
@@ -213,7 +214,7 @@ class console{
 
         return $out;
     }
-    /** 
+    /** пулучить заголовок сообщения согласно формату params['header]
      * @return string for out before log message
     */
     private static function getHeader($trace):string{
@@ -256,8 +257,7 @@ class console{
         
         return $out;    
     }
-    /** 
-     * translate $arg to string representation
+    /** translate $arg to string representation
      * @return string
     */
     private static function argToStr($arg,Array $config=[]):string{
@@ -293,8 +293,7 @@ class console{
             
         
     }
-    /** 
-     * determinate have the args a composite param (array,object,res)
+    /** determinate have the args a composite param (array,object,res)
      * @return boolean
     */
     private static function isComposite(Array $args):bool{

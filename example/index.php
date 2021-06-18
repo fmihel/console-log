@@ -47,6 +47,7 @@ function aa($msg=''){
 function bb($msg=''){
     
     try{
+        throw new \Exception('rais in test');      
         aa();
     
     }catch(Exception $e){
@@ -71,6 +72,7 @@ function bb($msg=''){
 
 try {
     bb();
+    
 } catch (\Exception $e) {
     console::error($e);
 };
