@@ -16,6 +16,7 @@ class console{
         'stringQuotes'=>'"', // quotes for print string
         'gap'=>' ',// margin between args in one line out string
         'onGetExceptionMessage'=>false, // callback as function ($e:Exception) :string
+        'table_field_len'=>10,// width in chars for out col in console::table
     ];
     
     /** get or set console param
@@ -310,6 +311,71 @@ class console{
         error_log(str_repeat($line,$count));        
     }
     
+    private static function gettype($value){
+        $type = gettype($value);
+        
+        if ($type==='array'){
+            if ( count(array_filter(array_keys($value), 'is_string')) > 0 ){
+                $type = 'assoc';
+            };
+        };
+
+        return $type;
+    }
+    /** отрисовывает таблицу */
+    public static function table(array $rows,$params=[]){
+        $params = array_merge(self::$params,$params);
+        
+        $field_len = $params['table_field_len'];
+        
+        $trace = self::trace();
+        error_log(self::getHeader($trace).'table/count='.count($rows));
+        
+
+        if (self::gettype($rows[0]) === 'assoc'){
+            $keys = array_keys($rows[0]);
+            $width = $field_len*(count($keys)+1);
+            self::line('-',$width);
+            $i = 0;    
+            foreach($rows as $row){
+                if($i===0){
+                    $out = 'N'.str_repeat(' ',$field_len-strlen('N'));
+                    foreach($keys as $key){
+                        $val = isset($key)?$key:'?';
+                        $val = trim(substr($val.'',0,$field_len));
+                        $val.=str_repeat(' ',$field_len-strlen($val));
+                        $out.=$val;
+                    }
+                    error_log($out);                    
+                    self::line('-',$width);
+                }
+                $out = $i.str_repeat(' ',$field_len-strlen($i.''));
+                foreach($keys as $key){
+                    $val = isset($row[$key])?$row[$key]:'null';
+                    $val = trim(substr($val.'',0,$field_len-1));
+                    $val.= str_repeat(' ',$field_len-strlen($val));
+                    $out.=$val;
+                }
+                error_log($out);
+                $i++;
+            }
+        }else{
+            $width = $field_len*(count($rows[0])+1);
+            self::line('-',$width);
+            for($i=0;$i<count($rows);$i++){
+                $out = $i.str_repeat(' ',$field_len-strlen($i.''));
+                $row = $rows[$i];
+                for($j = 0;$j<count($row);$j++){
+                    $val = isset($row[$j])?$row[$j]:'null';
+                    $val = trim(substr($val.'',0,$field_len-1));
+                    $val.= str_repeat(' ',$field_len-strlen($val));
+                    $out.=$val;
+                }
+                error_log($out);
+            }
+        }
+        self::line('-',$width);
+    }
     
 }   
     

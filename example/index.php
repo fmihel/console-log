@@ -9,7 +9,7 @@
 require_once __DIR__.'/../source/console.php';
 require_once __DIR__.'/test1.php';
 require_once __DIR__.'/test2.php';
-
+require_once __DIR__.'/test3.php';
 use fmihel\console;
 
 console::params([

@@ -1,0 +1,26 @@
+<?php
+
+use fmihel\console;
+
+const DS_ROWS  = [
+    ['id'=>1,"NAME"=>'Mike',"AGE"=>20,'ID_CLIENT'=>1],
+    ['id'=>2,"NAME"=>'Soma',"AGE"=>43,'ID_CLIENT'=>2],
+    ['id'=>3,"NAME"=>'Keks',"AGE"=>78,'ID_CLIENT'=>3],
+    ['id'=>4,"NAME"=>'Pretor wefjhwrf whjer jwjerh',"AGE"=>5,'ID_CLIENT'=>4],
+    ['id'=>3,"NAME"=>'Keks',"AGE"=>78,'ID_CLIENT'=>3],
+
+];
+
+const NUMS = [
+    [1,2,4,52],
+    ['A','T',34322,'2'],
+    ['QW','3',2,67,'F',9,2],
+    [0,8,8,63],
+];
+
+console::table(DS_ROWS);
+
+console::table(NUMS);
+
+
+?>
