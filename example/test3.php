@@ -3,11 +3,11 @@
 use fmihel\console;
 
 const DS_ROWS  = [
-    ['id'=>1,"NAME"=>'Mike',"AGE"=>20,'ID_CLIENT'=>1],
-    ['id'=>2,"NAME"=>'Soma',"AGE"=>43,'ID_CLIENT'=>2],
-    ['id'=>3,"NAME"=>'Keks',"AGE"=>78,'ID_CLIENT'=>3],
-    ['id'=>4,"NAME"=>'Pretor wefjhwrf whjer jwjerh',"AGE"=>5,'ID_CLIENT'=>4],
-    ['id'=>3,"NAME"=>'Keks',"AGE"=>78,'ID_CLIENT'=>3],
+    ['id'=>1,"NAMEFULLLENGTH"=>'Mike',"AGE"=>20,'ID_CLIENT'=>1],
+    ['id'=>2,"NAMEFULLLENGTH"=>'Soma',"AGE"=>43,'ID_CLIENT'=>2],
+    ['id'=>3,"NAMEFULLLENGTH"=>'Keks',"AGE"=>78,'ID_CLIENT'=>3],
+    ['id'=>4,"NAMEFULLLENGTH"=>'Pretor wefjhwrf whjer jwjerh',"AGE"=>5,'ID_CLIENT'=>4],
+    ['id'=>3,"NAMEFULLLENGTH"=>'Keks',"AGE"=>78,'ID_CLIENT'=>3],
 
 ];
 

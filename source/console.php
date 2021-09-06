@@ -323,13 +323,15 @@ class console{
         return $type;
     }
     /** отрисовывает таблицу */
-    public static function table(array $rows,$params=[]){
+    public static function table(array $rows,array $params=[]){
         $params = array_merge(self::$params,$params);
         
         $field_len = $params['table_field_len'];
         
         $trace = self::trace();
-        error_log(self::getHeader($trace).'table/count='.count($rows));
+        $header = self::getHeader($trace).'table/count='.count($rows);
+        self::line('-',strlen($header));
+        error_log($header);
         
 
         if (self::gettype($rows[0]) === 'assoc'){
@@ -342,7 +344,7 @@ class console{
                     $out = 'N'.str_repeat(' ',$field_len-strlen('N'));
                     foreach($keys as $key){
                         $val = isset($key)?$key:'?';
-                        $val = trim(substr($val.'',0,$field_len));
+                        $val = trim(substr($val.'',0,$field_len-1));
                         $val.=str_repeat(' ',$field_len-strlen($val));
                         $out.=$val;
                     }
