@@ -18,9 +18,18 @@ const NUMS = [
     [0,8,8,63],
 ];
 
-console::table(DS_ROWS);
+function out(){
 
-console::table(NUMS);
+    console::table(DS_ROWS,['debug_backtrace_level'=>4]);
 
+}
+function saa(){
+    out();
+}
+
+//console::table(DS_ROWS);
+
+//console::table(NUMS);
+saa();
 
 ?>

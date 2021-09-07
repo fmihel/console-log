@@ -17,6 +17,7 @@ class console{
         'gap'=>' ',// margin between args in one line out string
         'onGetExceptionMessage'=>false, // callback as function ($e:Exception) :string
         'table_field_len'=>10,// width in chars for out col in console::table
+        'debug_backtrace_level'=>3, // use debug_backtrace_level=4 for def header on call level up
     ];
     
     /** get or set console param
@@ -184,7 +185,7 @@ class console{
     private static function trace(){
 
         $p = self::$params;
-        $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS,3);
+        $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS,$p['debug_backtrace_level']);
         $len = count($trace);
         $out = [
             'line'=>false,
@@ -211,6 +212,16 @@ class console{
             $out['func']=isset($trace[2]['function']) ? $trace[2]['function'] : false;
             $out['type']=isset($trace[2]['type']) ? $trace[2]['type'] : false;
             $out['class']=isset($trace[2]['class']) ? $trace[2]['class'] : false;
+        }
+
+        if ($len===4){        
+            $out['fmt']=2;;            
+            
+            $out['line']=isset($trace[2]['line']) ? $trace[2]['line'] : false;
+            $out['file']=isset($trace[2]['file']) ? $trace[2]['file'] : false;
+            $out['func']=isset($trace[3]['function']) ? $trace[3]['function'] : false;
+            $out['type']=isset($trace[3]['type']) ? $trace[3]['type'] : false;
+            $out['class']=isset($trace[3]['class']) ? $trace[3]['class'] : false;
         }
 
         return $out;
@@ -324,59 +335,68 @@ class console{
     }
     /** отрисовывает таблицу */
     public static function table(array $rows,array $params=[]){
+
+        $storyParams = array_merge(self::$params);
+        
         $params = array_merge(self::$params,$params);
+        self::$params = $params;
         
         $field_len = $params['table_field_len'];
         
         $trace = self::trace();
-        $header = self::getHeader($trace).'table/count='.count($rows);
-        self::line('-',strlen($header));
+        $count = count($rows);
+        $header = self::getHeader($trace).'table/count='.$count;
+        $width = strlen($header);
+        self::line('-',$width);
         error_log($header);
         
-
-        if (self::gettype($rows[0]) === 'assoc'){
-            $keys = array_keys($rows[0]);
-            $width = $field_len*(count($keys)+1);
-            self::line('-',$width);
-            $i = 0;    
-            foreach($rows as $row){
-                if($i===0){
-                    $out = 'N'.str_repeat(' ',$field_len-strlen('N'));
+        if ($count>0){
+            if (self::gettype($rows[0]) === 'assoc'){
+                $keys = array_keys($rows[0]);
+                $width = $field_len*(count($keys)+1);
+                self::line('-',$width);
+                $i = 0;    
+                foreach($rows as $row){
+                    if($i===0){
+                        $out = 'N'.str_repeat(' ',$field_len-strlen('N'));
+                        foreach($keys as $key){
+                            $val = isset($key)?$key:'?';
+                            $val = trim(substr($val.'',0,$field_len-1));
+                            $val.=str_repeat(' ',$field_len-strlen($val));
+                            $out.=$val;
+                        }
+                        error_log($out);                    
+                        self::line('-',$width);
+                    }
+                    $out = $i.str_repeat(' ',$field_len-strlen($i.''));
                     foreach($keys as $key){
-                        $val = isset($key)?$key:'?';
+                        $val = isset($row[$key])?$row[$key]:'null';
                         $val = trim(substr($val.'',0,$field_len-1));
-                        $val.=str_repeat(' ',$field_len-strlen($val));
+                        $val.= str_repeat(' ',$field_len-strlen($val));
                         $out.=$val;
                     }
-                    error_log($out);                    
-                    self::line('-',$width);
+                    error_log($out);
+                    $i++;
                 }
-                $out = $i.str_repeat(' ',$field_len-strlen($i.''));
-                foreach($keys as $key){
-                    $val = isset($row[$key])?$row[$key]:'null';
-                    $val = trim(substr($val.'',0,$field_len-1));
-                    $val.= str_repeat(' ',$field_len-strlen($val));
-                    $out.=$val;
+            }else{
+                $width = $field_len*(count($rows[0])+1);
+                self::line('-',$width);
+                for($i=0;$i<count($rows);$i++){
+                    $out = $i.str_repeat(' ',$field_len-strlen($i.''));
+                    $row = $rows[$i];
+                    for($j = 0;$j<count($row);$j++){
+                        $val = isset($row[$j])?$row[$j]:'null';
+                        $val = trim(substr($val.'',0,$field_len-1));
+                        $val.= str_repeat(' ',$field_len-strlen($val));
+                        $out.=$val;
+                    }
+                    error_log($out);
                 }
-                error_log($out);
-                $i++;
-            }
-        }else{
-            $width = $field_len*(count($rows[0])+1);
-            self::line('-',$width);
-            for($i=0;$i<count($rows);$i++){
-                $out = $i.str_repeat(' ',$field_len-strlen($i.''));
-                $row = $rows[$i];
-                for($j = 0;$j<count($row);$j++){
-                    $val = isset($row[$j])?$row[$j]:'null';
-                    $val = trim(substr($val.'',0,$field_len-1));
-                    $val.= str_repeat(' ',$field_len-strlen($val));
-                    $out.=$val;
-                }
-                error_log($out);
             }
         }
         self::line('-',$width);
+
+        self::$params = $storyParams;
     }
     
 }   
