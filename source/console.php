@@ -334,7 +334,11 @@ class console{
         return $type;
     }
     /** отрисовывает таблицу */
-    public static function table(array $rows,array $params=[]){
+    public static function table(array $rows,array $params=[
+        'table_name'=>'table',
+        //'debug_backtrace_level'=>3,
+        //'table_field_len'=>10,
+    ]){
 
         $storyParams = array_merge(self::$params);
         
@@ -342,38 +346,41 @@ class console{
         self::$params = $params;
         
         $field_len = $params['table_field_len'];
-        
+        $sep = '|';
+        $sep_len = 1;
+        $num_len = 5;
+
         $trace = self::trace();
         $count = count($rows);
-        $header = self::getHeader($trace).'table/count='.$count;
-        $width = strlen($header);
+        $header = self::getHeader($trace).$params['table_name'].'/count='.$count;
+        $width = mb_strlen($header);
         self::line('-',$width);
         error_log($header);
         
         if ($count>0){
             if (self::gettype($rows[0]) === 'assoc'){
                 $keys = array_keys($rows[0]);
-                $width = $field_len*(count($keys)+1);
+                $width = $field_len*(count($keys))+$num_len;
                 self::line('-',$width);
                 $i = 0;    
                 foreach($rows as $row){
                     if($i===0){
-                        $out = 'N'.str_repeat(' ',$field_len-strlen('N'));
+                        $out = 'N'.str_repeat(' ',$num_len-mb_strlen('N'));
                         foreach($keys as $key){
                             $val = isset($key)?$key:'?';
-                            $val = trim(substr($val.'',0,$field_len-1));
-                            $val.=str_repeat(' ',$field_len-strlen($val));
-                            $out.=$val;
+                            $val = trim(mb_substr($val.'',0,$field_len-1-$sep_len));
+                            $val.=str_repeat(' ',$field_len-mb_strlen($val)-$sep_len);
+                            $out.=$sep.$val;
                         }
                         error_log($out);                    
                         self::line('-',$width);
                     }
-                    $out = $i.str_repeat(' ',$field_len-strlen($i.''));
+                    $out = $i.str_repeat(' ',$num_len-mb_strlen($i.''));
                     foreach($keys as $key){
                         $val = isset($row[$key])?$row[$key]:'null';
-                        $val = trim(substr($val.'',0,$field_len-1));
-                        $val.= str_repeat(' ',$field_len-strlen($val));
-                        $out.=$val;
+                        $val = trim(mb_substr($val.'',0,$field_len-1-$sep_len));
+                        $val.= str_repeat(' ',$field_len-mb_strlen($val)-$sep_len);
+                        $out.=$sep.$val;
                     }
                     error_log($out);
                     $i++;
@@ -382,12 +389,12 @@ class console{
                 $width = $field_len*(count($rows[0])+1);
                 self::line('-',$width);
                 for($i=0;$i<count($rows);$i++){
-                    $out = $i.str_repeat(' ',$field_len-strlen($i.''));
+                    $out = $i.str_repeat(' ',$field_len-mb_strlen($i.''));
                     $row = $rows[$i];
                     for($j = 0;$j<count($row);$j++){
                         $val = isset($row[$j])?$row[$j]:'null';
-                        $val = trim(substr($val.'',0,$field_len-1));
-                        $val.= str_repeat(' ',$field_len-strlen($val));
+                        $val = trim(mb_substr($val.'',0,$field_len-1));
+                        $val.= str_repeat(' ',$field_len-mb_strlen($val));
                         $out.=$val;
                     }
                     error_log($out);
