@@ -71,6 +71,14 @@ function bb($msg=''){
 //echo '</xmp>';
 
 try {
+    console::time('test');
+    sleep(1);
+    console::timeLog('test');
+    sleep(1);
+    console::timeLog('test');
+    console::time('test');
+    console::timeEnd('test');
+    console::timeEnd('test');
     bb();
     
 } catch (\Exception $e) {

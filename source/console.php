@@ -19,7 +19,8 @@ class console{
         'table_field_len'=>10,// width in chars for out col in console::table
         'debug_backtrace_level'=>3, // use debug_backtrace_level=4 for def header on call level up
     ];
-    
+    private static $timers = []; // list of current timers
+
     /** get or set console param
      * @return array of params 
     */
@@ -34,7 +35,7 @@ class console{
         $out = '';
         $num = 0;
         
-        $composite = self::isComposite($args);
+        $composite = self::_isComposite($args);
 
         foreach($args as $arg){
             $gap = ($out !== ''?$p['gap']:'');
@@ -42,7 +43,7 @@ class console{
             $out.=
                 ($break ? $p['break'] : $gap )
                 .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
-                .self::argToStr($arg);
+                .self::_argToStr($arg);
         }
         return $out;
 
@@ -50,29 +51,29 @@ class console{
     /** вывод в лог */
     public static function log(...$args){
 
-        $trace = self::trace();
-        error_log(self::getHeader($trace).self::_formatArgs(...$args));
+        $trace = self::_trace();
+        error_log(self::_getHeader($trace).self::_formatArgs(...$args));
     }
     /** клон console::log */
     public static function debug(...$args){
-        $trace = self::trace();
-        error_log(self::getHeader($trace).self::_formatArgs(...$args));
+        $trace = self::_trace();
+        error_log(self::_getHeader($trace).self::_formatArgs(...$args));
     }
     /** клон console::log */
     public static function info(...$args){
-        $trace = self::trace();
-        error_log(self::getHeader($trace).self::_formatArgs(...$args));
+        $trace = self::_trace();
+        error_log(self::_getHeader($trace).self::_formatArgs(...$args));
     }
     /** вывод в лог либо аналогично выводу log с приставкой error либо вывод объекта Exception*/
     public static function error(...$args){
         $p = self::$params;
 
-        $trace = self::trace();
+        $trace = self::_trace();
         
         $out = '';
         $num = 0;
         $is_exception = false;
-        $composite = self::isComposite($args);
+        $composite = self::_isComposite($args);
         if ( count($args) === 1 && is_a($args[0],'\Exception') ){
             $is_exception = true;
             $composite = false;
@@ -84,7 +85,7 @@ class console{
             $out.=
                 ($break ? $p['break'] : $gap )
                 .( ( $p['printParamNum'] && $break )?'#'.($num++).': ' :'' )
-                .self::argToStr($arg,['exceptionAsObject'=>false]);
+                .self::_argToStr($arg,['exceptionAsObject'=>false]);
         }
 
         if ($is_exception){
@@ -94,7 +95,7 @@ class console{
             self::_log_exception($args[0],$trace);
             self::line();
         }else
-            error_log('Error '.self::getHeader($trace).$out);
+            error_log('Error '.self::_getHeader($trace).$out);
 
     }
     /** логирование Exception  */
@@ -117,7 +118,7 @@ class console{
             $object['function'] =isset($first['function'])?$first['function'].'()':'';
         }
         //--------------------------------------------------------------
-        error_log('Exception '.self::getHeader($tr).$msg);
+        error_log('Exception '.self::_getHeader($tr).$msg);
         //--------------------------------------------------------------
         for($i=0;$i<$count;$i++){
             
@@ -135,10 +136,10 @@ class console{
         //--------------------------------------------------------------
         for($i=0;$i<$count;$i++){   
             $trace = $traces[$count-$i-1];
-            error_log('trace     '.self::getHeader($trace));
+            error_log('trace     '.self::_getHeader($trace));
         };
         //--------------------------------------------------------------
-        error_log('trace     '.self::getHeader($object));
+        error_log('trace     '.self::_getHeader($object));
         //--------------------------------------------------------------
     }
     /** formating file name for use in header
@@ -146,7 +147,7 @@ class console{
      * @param {string} $format - type of format 'file' | 'name' | 'short' 
      * @return string
     */
-    private static function formatFileName(string $name,string $format):string{
+    private static function _formatFileName(string $name,string $format):string{
         $p = self::$params;
         
         if ($format === 'name')
@@ -182,7 +183,7 @@ class console{
      * 'fmt'=>0       | 1 - outer func 2 - class func
      * ];
     */
-    private static function trace(){
+    private static function _trace(){
 
         $p = self::$params;
         $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS,$p['debug_backtrace_level']);
@@ -229,7 +230,7 @@ class console{
     /** пулучить заголовок сообщения согласно формату params['header]
      * @return string for out before log message
     */
-    private static function getHeader($trace):string{
+    private static function _getHeader($trace):string{
         $p = self::$params;
         $trace = array_merge([
             'file'=>false,
@@ -243,9 +244,9 @@ class console{
         if (!$trace['func'] && $trace['function'])
             $trace['func'] = $trace['function'];
 
-        $file = $trace['file'] ? self::formatFileName($trace['file'],'file') : '';
-        $name = $trace['file'] ? self::formatFileName($trace['file'],'name') : '';
-        $short = $trace['file'] ? self::formatFileName($trace['file'],'short') : '';
+        $file = $trace['file'] ? self::_formatFileName($trace['file'],'file') : '';
+        $name = $trace['file'] ? self::_formatFileName($trace['file'],'name') : '';
+        $short = $trace['file'] ? self::_formatFileName($trace['file'],'short') : '';
         $line = $trace['line'] ? $trace['line'] : '';
         
         $object = '';
@@ -272,7 +273,7 @@ class console{
     /** translate $arg to string representation
      * @return string
     */
-    private static function argToStr($arg,Array $config=[]):string{
+    private static function _argToStr($arg,Array $config=[]):string{
         $c = array_merge([
             'exceptionAsObject' => true,
         ],$config);
@@ -308,7 +309,7 @@ class console{
     /** determinate have the args a composite param (array,object,res)
      * @return boolean
     */
-    private static function isComposite(Array $args):bool{
+    private static function _isComposite(Array $args):bool{
         foreach($args as $arg){
             $type = gettype($arg);
             if (array_search($type,['string','integer','boolean','double','NULL']) === false) {
@@ -322,7 +323,7 @@ class console{
         error_log(str_repeat($line,$count));        
     }
     
-    private static function gettype($value){
+    private static function _gettype($value){
         $type = gettype($value);
         
         if ($type==='array'){
@@ -333,16 +334,15 @@ class console{
 
         return $type;
     }
-    /** отрисовывает таблицу */
-    public static function table(array $rows,array $params=[
-        'table_name'=>'table',
-        //'debug_backtrace_level'=>3,
-        //'table_field_len'=>10,
-    ]){
+    /** отрисовывает таблицу 
+     * @param {array}  rows - is simple array, or array of assoc array [1,2,3,4] or [['A'=>1,'B'=>2],['A'=>4,'B'=>5],[...]]
+     * @param {array}  params - ['table_name'=>'table','debug_backtrace_level'=>3,'table_field_len'=>10]
+    */
+    public static function table(array $rows,array $params=[]){
 
         $storyParams = array_merge(self::$params);
         
-        $params = array_merge(self::$params,$params);
+        $params = array_merge(self::$params,['table_name'=>'table'],$params);
         self::$params = $params;
         
         $field_len = $params['table_field_len'];
@@ -350,15 +350,15 @@ class console{
         $sep_len = 1;
         $num_len = 5;
 
-        $trace = self::trace();
+        $trace = self::_trace();
         $count = count($rows);
-        $header = self::getHeader($trace).$params['table_name'].'/count='.$count;
+        $header = self::_getHeader($trace).$params['table_name'].'/count='.$count;
         $width = mb_strlen($header);
         self::line('-',$width);
         error_log($header);
         
         if ($count>0){
-            if (self::gettype($rows[0]) === 'assoc'){
+            if (self::_gettype($rows[0]) === 'assoc'){
                 $keys = array_keys($rows[0]);
                 $width = $field_len*(count($keys))+$num_len;
                 self::line('-',$width);
@@ -405,6 +405,42 @@ class console{
 
         self::$params = $storyParams;
     }
+    public static function time(string $label,$out=true){
+        if (isset(self::$timers[$label])){
+            $trace = self::_trace();
+            error_log(self::_getHeader($trace)."warn  timer [$label] is already running!");            
+        }else{
+            self::$timers[$label] = microtime(true);
+            if ($out){
+                $trace = self::_trace();
+                error_log(self::_getHeader($trace)."start timer [$label]");            
+            }
+        }
+    }
+    public static function timeEnd(string $label){
+        if (!isset(self::$timers[$label])){
+            $trace = self::_trace();
+            error_log(self::_getHeader($trace)."error timer [$label] is not defined! ");            
+        }else{
+            $current = microtime(true)-self::$timers[$label];
+            unset(self::$timers[$label]);
+            $trace = self::_trace();
+            error_log(self::_getHeader($trace)."stop  timer [$label] at ".round($current,4).'[sec]');            
+        }
+
+    }
+    public static function timeLog(string $label){
+        if (!isset(self::$timers[$label])){
+            $trace = self::_trace();
+            error_log(self::_getHeader($trace)."warn  timer [$label] is not defined! ");            
+        }else{
+            $current = microtime(true)-self::$timers[$label];
+            $trace = self::_trace();
+            error_log(self::_getHeader($trace)."now   timer [$label] is ".round($current,4).'[sec]');            
+        }
+
+    }
+
     
 }   
     
