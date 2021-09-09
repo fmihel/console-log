@@ -20,7 +20,7 @@ const NUMS = [
 
 function out(){
 
-    console::table(DS_ROWS,['debug_backtrace_level'=>4]);
+    console::table(DS_ROWS,['debug_backtrace_level'=>4,'select_row'=>2]);
 
 }
 function saa(){

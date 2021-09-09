@@ -336,16 +336,17 @@ class console{
     }
     /** отрисовывает таблицу 
      * @param {array}  rows - is simple array, or array of assoc array [1,2,3,4] or [['A'=>1,'B'=>2],['A'=>4,'B'=>5],[...]]
-     * @param {array}  params - ['table_name'=>'table','debug_backtrace_level'=>3,'table_field_len'=>10]
+     * @param {array}  params - ['table_name'=>'table','debug_backtrace_level'=>3,'table_field_len'=>10,'select_row'=>1]
     */
     public static function table(array $rows,array $params=[]){
 
         $storyParams = array_merge(self::$params);
         
-        $params = array_merge(self::$params,['table_name'=>'table'],$params);
+        $params = array_merge(self::$params,['table_name'=>'table','select_row'=>false],$params);
         self::$params = $params;
         
         $field_len = $params['table_field_len'];
+        $select_row = $params['select_row'];
         $sep = '|';
         $sep_len = 1;
         $num_len = 5;
@@ -360,16 +361,27 @@ class console{
         if ($count>0){
             if (self::_gettype($rows[0]) === 'assoc'){
                 $keys = array_keys($rows[0]);
-                $width = $field_len*(count($keys))+$num_len;
+                $width = $field_len*(count($keys))+$num_len+ ( $select_row!==false ? 2 : 0 );
+
                 self::line('-',$width);
-                $i = 0;    
+                $i = 0;
+
+                $select_left    =   '';
+                $select_right   =   '';
+
                 foreach($rows as $row){
+
+                    if ($select_row!==false){
+                        $select_left = ($i === $select_row?'> ':'  ');
+                        $select_right = ($i === $select_row?'<':'');
+                    }
+    
                     if($i===0){
-                        $out = 'N'.str_repeat(' ',$num_len-mb_strlen('N'));
+                        $out = ($select_row!==false?'  ':'').'N'.str_repeat(' ',$num_len-mb_strlen('N'));
                         foreach($keys as $key){
                             $val = isset($key)?$key:'?';
                             $val = trim(mb_substr($val.'',0,$field_len-1-$sep_len));
-                            $val.=str_repeat(' ',$field_len-mb_strlen($val)-$sep_len);
+                            $val.= str_repeat(' ',$field_len-mb_strlen($val)-$sep_len);
                             $out.=$sep.$val;
                         }
                         error_log($out);                    
@@ -382,7 +394,11 @@ class console{
                         $val.= str_repeat(' ',$field_len-mb_strlen($val)-$sep_len);
                         $out.=$sep.$val;
                     }
-                    error_log($out);
+                    if($i === $select_row && $i>0) 
+                        self::line('.',$width);         
+                    error_log($select_left.$out.$select_right);
+                    if($i === $select_row && $i<$count-1) 
+                        self::line('`',$width);         
                     $i++;
                 }
             }else{
