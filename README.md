@@ -28,6 +28,7 @@ try{
 |name|notes|example|
 |----|----|----|
 **console::log(...$args);**|| console::log("text",['a',3,4]);|
+**console::logf(...$args,$countOrCallback);**|| out only 3 times - console::logf("text",3), out if i = 10 - console::log($m,'i',$i,function($m,$a,$i){ return $i === 10; }); |
 **console::info(...$args);**|clone of `console::log`| console::info("text",['a',3,4]);|
 **console::debug(...$args);**|clone of `console::log`| console::debug("text",['a',3,4]);|
 **console::error(...$args);**|add prefix [ERROR] to out and hanldler of Exception class| console::error('division by zerro');|

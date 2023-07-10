@@ -21,6 +21,7 @@ class console
         'debug_backtrace_level' => 3, // use debug_backtrace_level=4 for def header on call level up
     ];
     private static $timers = []; // list of current timers
+    private static $vars = []; // [name->count] for logf
 
     /** get or set console param
      * @return array of params
@@ -58,6 +59,40 @@ class console
     {
         $trace = self::_trace();
         error_log(self::_getHeader($trace) . self::_formatArgs(...$args));
+    }
+    /** вывод в лог по условию. либо $countOrCallback = int (кол-во раз вывода, по умолчанию один раз)  либо ф-ция, которая должна вернуть true для вывода*/
+    public static function logf(...$argsWidthCond/*...$args, $countOrCallback = 1*/)
+    {
+        if (count($argsWidthCond) < 2) {
+            error_log('logf must have two or more params (!!!');
+            return;
+        };
+
+        $args = array_slice($argsWidthCond, 0, count($argsWidthCond) - 1);
+        $countOrCallback = $argsWidthCond[count($argsWidthCond) - 1];
+
+        $trace = self::_trace();
+        $name = self::_getHeader($trace);
+
+        if (is_int($countOrCallback)) {
+
+            if (!isset(self::$vars[$name])) {
+                self::$vars[$name] = $countOrCallback;
+            }
+
+            self::$vars[$name] -= 1;
+
+            if (self::$vars[$name] < 0) {
+                return;
+            }
+
+        } elseif (is_callable($countOrCallback)) {
+            if ($countOrCallback(...$args) !== true) {
+                return;
+            }
+        };
+
+        error_log($name . self::_formatArgs(...$args));
     }
     /** клон console::log */
     public static function debug(...$args)
