@@ -94,6 +94,34 @@ class console
 
         error_log($name . self::_formatArgs(...$args));
     }
+    /** вывод в лог единожды из данного места в файле*/
+    public static function once(...$args)
+    {
+        $trace = self::_trace();
+        $name = self::_getHeader($trace);
+
+        if (!isset(self::$vars[$name])) {
+            self::$vars[$name] = 1;
+            error_log($name . self::_formatArgs(...$args));
+        }
+    }
+    /** вывод в лог по условию  */
+    public static function if($condition, ...$args)
+    {
+        $trace = self::_trace();
+        $name = self::_getHeader($trace);
+
+        if (is_callable($condition)) {
+            if ($condition(...$args) !== true) {
+                return;
+            }
+        } elseif (!$condition) {
+            return;
+        }
+
+        error_log($name . self::_formatArgs(...$args));
+    }
+
     /** клон console::log */
     public static function debug(...$args)
     {
