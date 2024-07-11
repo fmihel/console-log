@@ -166,6 +166,7 @@ class console
             self::_log_exception($args[0], $trace);
 
             error_log('');
+            error_log('remote     ' . $_SERVER['REMOTE_ADDR']);
             error_log('uri        ' . trim($_SERVER['REQUEST_URI'] . $p['break']));
 
             $request_param = print_r($_REQUEST, true);
