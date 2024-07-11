@@ -162,8 +162,17 @@ class console
         if ($is_exception) {
 
             self::line();
-            //error_log(print_r($args[0]->getTrace(),true));
+
             self::_log_exception($args[0], $trace);
+
+            error_log('');
+            error_log('uri        ' . trim($_SERVER['REQUEST_URI'] . $p['break']));
+
+            $request_param = print_r($_REQUEST, true);
+            $request_param = strlen($request_param) > 200 ? (substr($request_param, 0, 200) . '..') : $request_param;
+            $request_param = str_replace(["\n", '  ', '  '], [' ', '', ''], $request_param);
+            error_log('request    ' . $request_param);
+
             self::line();
         } else {
             error_log('Error ' . self::_getHeader($trace) . $out);
