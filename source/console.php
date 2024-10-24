@@ -182,34 +182,40 @@ class console
 
     }
 
+    private static function short_format($val): string
+    {
+
+        $type = self::gettype($val);
+        if ($type === 'array') {
+            // $count = count($val);
+            return "[...]";
+
+        } elseif ($type === 'assoc') {
+            return '{...}';
+        }
+        return $val;
+    }
+
     public static function top(...$args)
     {
         $out = [];
         foreach ($args as $arg) {
-            $typeArg = gettype($arg);
+            $typeArg = self::gettype($arg);
+            $to = [];
             if ($typeArg === 'array') {
-                $to = [];
-                if (self::is_assoc($arg)) {
-                    foreach ($arg as $key => $val) {
-                        $typeEl = gettype($val);
-                        if ($typeEl === 'array') {
-                            $val = '[...]';
-                        }
-                        $to[$key] = $val;
-                    };
-                    $arg = $to;
 
-                } else {
-                    for ($i = 0; $i < count($arg); $i++) {
-                        $el = $arg[$i];
-                        $typeEl = gettype($el);
-                        if ($typeEl === 'array') {
-                            $el = '[...]';
-                        }
-                        $to[] = $el;
-                    };
-                    $arg = $to;
-                }
+                for ($i = 0; $i < count($arg); $i++) {
+                    $to[] = self::short_format($arg[$i]);
+                };
+                $arg = $to;
+
+            } elseif ($typeArg === 'assoc') {
+
+                foreach ($arg as $key => $val) {
+                    $to[$key] = self::short_format($val);
+                };
+                $arg = $to;
+
             }
             $out[] = $arg;
         }
@@ -457,7 +463,7 @@ class console
         error_log(str_repeat($line, $count));
     }
 
-    private static function _gettype($value)
+    private static function gettype($value)
     {
         $type = gettype($value);
 
@@ -495,7 +501,7 @@ class console
         error_log($header);
 
         if ($count > 0) {
-            if (self::_gettype($rows[0]) === 'assoc') {
+            if (self::gettype($rows[0]) === 'assoc') {
                 $keys = array_keys($rows[0]);
                 $width = $field_len * (count($keys)) + $num_len + ($select_row !== false ? 2 : 0);
 
@@ -598,20 +604,6 @@ class console
             error_log(self::_getHeader($trace) . "now   timer [$label] is " . round($current, 4) . '[sec]');
         }
 
-    }
-
-    private static function is_assoc($array)
-    {
-        if (gettype($array) !== 'array') {
-            return false;
-        }
-
-        $result = false;
-        try {
-            $result = (count(array_filter(array_keys($array), 'is_string')) > 0);
-        } catch (\Exception $e) {
-        }
-        return $result;
     }
 
 }
