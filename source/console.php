@@ -182,7 +182,7 @@ class console
 
     }
 
-    private static function short_format($val): string
+    private static function short_format($val)
     {
 
         $type = self::gettype($val);
