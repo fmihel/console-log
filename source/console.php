@@ -105,6 +105,7 @@ class console
             error_log($name . self::_formatArgs(...$args));
         }
     }
+
     /** вывод в лог по условию  */
     public static function if($condition, ...$args)
     {
@@ -180,6 +181,42 @@ class console
         }
 
     }
+
+    public static function top(...$args)
+    {
+        $out = [];
+        foreach ($args as $arg) {
+            $typeArg = gettype($arg);
+            if ($typeArg === 'array') {
+                $to = [];
+                if (self::is_assoc($arg)) {
+                    foreach ($arg as $key => $val) {
+                        $typeEl = gettype($val);
+                        if ($typeEl === 'array') {
+                            $val = '[...]';
+                        }
+                        $to[$key] = $val;
+                    };
+                    $arg = $to;
+
+                } else {
+                    for ($i = 0; $i < count($arg); $i++) {
+                        $el = $arg[$i];
+                        $typeEl = gettype($el);
+                        if ($typeEl === 'array') {
+                            $el = '[...]';
+                        }
+                        $to[] = $el;
+                    };
+                    $arg = $to;
+                }
+            }
+            $out[] = $arg;
+        }
+        $trace = self::_trace();
+        error_log(self::_getHeader($trace) . self::_formatArgs(...$out));
+    }
+
     /** логирование Exception  */
     private static function _log_exception($e, $tr)
     {
@@ -561,6 +598,20 @@ class console
             error_log(self::_getHeader($trace) . "now   timer [$label] is " . round($current, 4) . '[sec]');
         }
 
+    }
+
+    private static function is_assoc($array)
+    {
+        if (gettype($array) !== 'array') {
+            return false;
+        }
+
+        $result = false;
+        try {
+            $result = (count(array_filter(array_keys($array), 'is_string')) > 0);
+        } catch (\Exception $e) {
+        }
+        return $result;
     }
 
 }
