@@ -19,6 +19,7 @@ class console
         'onGetExceptionMessage' => false, // callback as function ($e:Exception) :string
         'table_field_len' => 10, // width in chars for out col in console::table
         'debug_backtrace_level' => 3, // use debug_backtrace_level=4 for def header on call level up
+        'crop_string' => 100, // crop string for  console::short ( 0 - no crop)
     ];
     private static $timers = []; // list of current timers
     private static $vars = []; // [name->count] for logf
@@ -196,7 +197,7 @@ class console
         return $val;
     }
 
-    public static function top(...$args)
+    public static function short(...$args)
     {
         $out = [];
         foreach ($args as $arg) {
@@ -216,6 +217,8 @@ class console
                 };
                 $arg = $to;
 
+            } elseif ($typeArg === 'string') {
+                $arg = self::crop($arg);
             }
             $out[] = $arg;
         }
@@ -604,6 +607,16 @@ class console
             error_log(self::_getHeader($trace) . "now   timer [$label] is " . round($current, 4) . '[sec]');
         }
 
+    }
+
+    private static function crop(string $str)
+    {
+        $crop = self::$params['crop_string'];
+        $len = strlen($str);
+        if ($crop > 0 && $len > $crop) {
+            return substr($str, 0, $crop) . '..';
+        }
+        return $str;
     }
 
 }
